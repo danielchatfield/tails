@@ -31,6 +31,9 @@ live-build
 # needed for initramfs-tools' COMPRESS=lzma
 lzma
 
+# Needed by tomoyo
+tomoyo-tools
+
 ### Software
 
 #include <gnome-core>
