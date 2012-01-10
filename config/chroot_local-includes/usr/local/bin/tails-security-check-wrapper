@@ -9,7 +9,8 @@ while :; do
    if [ -e "$TORDATE_DONE_FILE" ]; then
       break
    fi
-   inotifywait -q -t "$INOTIFY_TIMEOUT" -e create --format %w%f "$TORDATE_DIR"
+   inotifywait -q -t "$INOTIFY_TIMEOUT" -e create --format %w%f "$TORDATE_DIR" \
+       2> /dev/null || sleep 1
 done
 
 exec /usr/local/bin/tails-security-check
