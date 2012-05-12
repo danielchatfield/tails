@@ -4,7 +4,7 @@
 . "${LB_BASE:-/usr/share/live/build}"/scripts/build.sh
 
 # Setting static variables
-DESCRIPTION="$(Echo 'removing buggy syslinux help')"
+DESCRIPTION="$(Echo 'customizing syslinux menu')"
 HELP=""
 USAGE="${PROGRAM}"
 
@@ -27,13 +27,9 @@ case "${LB_BINARY_IMAGES}" in
 		;;
 esac
 
-Echo_message "customize buggy syslinux help"
-
 # Remove help menu entry from menu.cfg (and every line after)
 CFG_FILE="${SYSLINUX_PATH}/menu.cfg"
 perl -pni -E 'exit if m{^label[[:blank:]]+help$}' "${CFG_FILE}"
-
-Echo_message "customize syslinux menu"
 
 sed -i -e "s/Boot menu/Boot Tails/" "${CFG_FILE}"
 
