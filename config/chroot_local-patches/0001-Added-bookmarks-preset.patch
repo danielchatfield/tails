@@ -1,0 +1,33 @@
+From e173105a99a545f754d367325ef91714ac81d443 Mon Sep 17 00:00:00 2001
+From: Tails developers <amnesia@boum.org>
+Date: Fri, 5 Oct 2012 22:54:29 +0200
+Subject: [PATCH] Added bookmarks preset
+
+---
+ lib/Tails/Persistence/Configuration/Presets.pm |   10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/lib/Tails/Persistence/Configuration/Presets.pm b/lib/Tails/Persistence/Configuration/Presets.pm
+index 5113828..ede4b24 100644
+--- a/lib/Tails/Persistence/Configuration/Presets.pm
++++ chroot/usr/share/perl5/Tails/Persistence/Configuration/Presets.pm
+@@ -114,6 +114,16 @@ method _build__presets {
+             enabled     => 0,
+             icon_name   => 'network-wired',
+         },
++	{
++            name        => $self->encoding->decode(gettext(q{Browser bookmarks})),
++            description => $self->encoding->decode(gettext(
++                q{Bookmarks saved in Iceweasel browser}
++            )),
++            destination => '/home/amnesia/.mozilla/firefox/bookmarks',
++            options     => [ 'source=bookmarks' ],
++            enabled     => 0,
++            icon_name   => 'user-bookmarks',
++        },
+         {
+             name        => $self->encoding->decode(gettext(q{APT Packages})),
+             description => $self->encoding->decode(gettext(
+-- 
+1.7.10.4
+
