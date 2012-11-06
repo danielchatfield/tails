@@ -25,8 +25,11 @@ ln -s /usr/bin/gcc-${available_gcc_version} /usr/bin/gcc-${wanted_gcc_version}
 # At this time of the build, we've got a recent enough X.Org installed,
 # so we can install the X11 tools eventually.
 dpkg --install \
+   /usr/share/amnesia/packages/virtualbox_*.deb             \
    /usr/share/amnesia/packages/virtualbox-guest-utils_*.deb \
-   /usr/share/amnesia/packages/virtualbox-guest-x11_*.deb
+   /usr/share/amnesia/packages/virtualbox-guest-x11_*.deb   \
+   /usr/share/amnesia/packages/virtualbox-qt_*.deb
+apt-get -f install --yes
 
 # Have the modules built for every installed kernel
 for KERNEL in /boot/vmlinuz-* ; do
@@ -36,7 +39,7 @@ for KERNEL in /boot/vmlinuz-* ; do
 
    # dkms uses uname to find out what kernel to build modules for.
    # So, after installing dkms, but before installing
-   # virtualbox-guest-dkms, we divert uname to a fake one that
+   # virtualbox{-guest,}-dkms, we divert uname to a fake one that
    # emulates 'uname -r' by reporting the kernel version found in /boot rather
    # than the build system's one.
 
@@ -51,18 +54,22 @@ EOF
    apt-get install --yes linux-headers-$(uname -r)
 
    # Have the modules automagically built by dkms for all kernels.
-   dpkg --install /usr/share/amnesia/packages/virtualbox-guest-dkms_*.deb
+   dpkg --install \
+      /usr/share/amnesia/packages/virtualbox-guest-dkms_*.deb \
+      /usr/share/amnesia/packages/virtualbox-dkms_*.deb
    apt-get -f install --yes
 
    # Revert to the real uname.
    mv /bin/uname.$$ /bin/uname
 done
 
-# clean the build directory
+# clean the build directories
+rm -r /var/lib/dkms/virtualbox/
 rm -r /var/lib/dkms/virtualbox-guest/
 
-# virtualbox-guest-dkms's postrm script deletes any previously
+# virtualbox{-guest,}-dkms's postrm scripts delete any previously
 # built binary module; let's delete it before purging the package.
+rm /var/lib/dpkg/info/virtualbox-dkms.prerm
 rm /var/lib/dpkg/info/virtualbox-guest-dkms.prerm
 
 # remove temporary workaround
