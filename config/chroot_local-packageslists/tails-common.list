@@ -155,6 +155,8 @@ openssh-client
 parted
 pidgin
 pidgin-otr
+# for minitube
+phonon-backend-gstreamer
 msn-pecan
 pitivi
 plymouth
