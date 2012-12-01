@@ -123,6 +123,7 @@ live-config-sysvinit
 lvm2
 macchanger
 mat
+minitube
 monkeysphere
 # our vidialia-wrapper needs lckdo
 moreutils
