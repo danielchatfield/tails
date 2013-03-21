@@ -1,0 +1,171 @@
+#!/bin/bash
+# Note that we must use bash since we are gonna source files
+# that have bashisms in them.
+
+set -e
+
+NAME=$(basename ${0})
+
+usage() {
+    echo "Usage: $NAME [OPTION]... ISO [FEATURE]...
+Tests the FEATUREs (all by default) of ISO. Note that this command must be run
+from the Tails source directory.
+
+Options:
+  --capture=FILE     Captures the test session into FILE using VP8 encoding.
+                     Requires ffmpeg and libvpx0.
+  --keep-snapshots   Don't ever delete the background snapshots. This can a big
+                     time saver when debugging new features.
+  --temp-dir         Directory where various temporary files are written
+                     during a test, e.g. VM snapshots and memory dumps,
+                     failure screenshots, pcap files and disk images
+                     (default is /tmp/TailsToaster).
+  --view             Shows the test session in a windows. Requires x11vnc
+                     and xtightvncviewer.
+  --vnc-server-only  Starts a VNC server for the test session. Requires x11vnc.
+  --newest-iso       Omits the ISO argument; instead we use the ISO image
+                     with most recent mtime in the current directory
+"
+}
+
+error() {
+    echo "${NAME}: error: ${*}" >&2
+    usage
+    exit 1
+}
+
+check_dependency() {
+    if ! which "${1}" >/dev/null && ! dpkg -s "${1}" >/dev/null 2>&1; then
+        error "'${1}' is missing, please install it and run again. Aborting..."
+    fi
+}
+
+display_in_use() {
+    [ -e "/tmp/.X${1#:}-lock" ]
+}
+
+next_free_display() {
+    display_nr=0
+    while display_in_use ":${display_nr}"; do
+	display_nr=$((display_nr+1))
+    done
+    echo ":${display_nr}"
+}
+
+start_xvfb() {
+    Xvfb $TARGET_DISPLAY -screen 0 1024x768x24+32 >/dev/null 2>&1 &
+    XVFB_PID=$!
+    trap "kill -0 ${XVFB_PID} 2>/dev/null && kill -9 ${XVFB_PID}; \
+          rm -f /tmp/.X${TARGET_DISPLAY#:}-lock" EXIT
+    # Wait for Xvfb to run on TARGET_DISPLAY
+    until display_in_use $TARGET_DISPLAY; do
+	sleep 1
+    done
+    echo "Virtual X framebuffer started on display ${TARGET_DISPLAY}"
+    # Hide the mouse cursor so it won't mess up Sikuli's screen scanning
+    unclutter -display $TARGET_DISPLAY -root -idle 0 >/dev/null 2>&1 &
+}
+
+start_vnc_server() {
+    check_dependency x11vnc
+    VNC_SERVER_PORT="$(x11vnc -listen localhost -display ${TARGET_DISPLAY} \
+                              -bg -nopw 2>&1 | \
+                                  grep -m 1 "^PORT=[0-9]\+" | sed 's/^PORT=//')"
+    echo "VNC server running on: localhost:${VNC_SERVER_PORT}"
+}
+
+start_vnc_viewer() {
+    check_dependency xtightvncviewer
+    xtightvncviewer -viewonly localhost:${VNC_SERVER_PORT} 1>/dev/null 2>&1 &
+}
+
+capture_session() {
+    check_dependency ffmpeg
+    check_dependency libvpx0
+    echo "Capturing guest display into ${CAPTURE_FILE}"
+    ffmpeg -f x11grab -s 1024x768 -r 15 -i ${TARGET_DISPLAY}.0 -an \
+        -vcodec libvpx -y "${CAPTURE_FILE}" >/dev/null 2>&1 &
+}
+
+# main script
+
+unset CAPTURE_FILE VNC_VIEWER VNC_SERVER
+SHORTOPTS="a:c"
+LONGOPTS="view,vnc-server-only,capture:,help,temp-dir:,newest-iso:,keep-snapshots"
+OPTS=$(getopt -o $SHORTOPTS --longoptions $LONGOPTS -n "${NAME}" -- "$@")
+eval set -- "$OPTS"
+while [ $# -gt 0 ]; do
+    case $1 in
+        --view)
+            VNC_VIEWER=yes
+            VNC_SERVER=yes
+            ;;
+        --vnc-server-only)
+            VNC_VIEWER=
+            VNC_SERVER=yes
+            ;;
+        --capture)
+            shift
+            CAPTURE_FILE="$1"
+            ;;
+        --keep-snapshots)
+            export KEEP_SNAPSHOTS="yes"
+            ;;
+        --temp-dir)
+            shift
+            export TEMP_DIR="$(readlink -f $1)"
+            ;;
+        --newest-iso)
+	    NEWEST_ISO=yes
+	    unset ISO
+            ;;
+        --help)
+	    usage
+            exit 0
+            ;;
+        --)
+            shift
+            if [ -z "${NEWEST_ISO}" ]; then
+                if [ -n "$1" ]; then
+                    export ISO="$(readlink -f $1)"
+                    shift
+                fi
+            fi
+            break
+            ;;
+    esac
+    shift
+done
+
+if [ -z "${NEWEST_ISO}" ] && [ -z "${ISO}" ]; then
+    error "No ISO provided and --newest-iso not given. Aborting..."
+fi
+
+for dep in git libvirt-bin libvirt-dev virt-viewer libsikuli-script-java \
+            libxslt1-dev libxml2-dev tcpdump xvfb; do
+    check_dependency "${dep}"
+done
+
+TARGET_DISPLAY=$(next_free_display)
+
+start_xvfb
+
+if [ -n "${CAPTURE_FILE}" ]; then
+    capture_session
+fi
+if [ -n "${VNC_SERVER}" ]; then
+    start_vnc_server
+fi
+if [ -n "${VNC_VIEWER}" ]; then
+    start_vnc_viewer
+fi
+
+export SIKULI_HOME="/usr/share/java"
+export DISPLAY=${TARGET_DISPLAY}
+. features/.rvmrc
+check_dependency cucumber
+if [ -z "${*}" ]; then
+    cucumber --format ExtraHooks::Pretty features/cucumber/
+else
+    cucumber --format ExtraHooks::Pretty features/cucumber/step_definitions features/cucumber/support ${*}
+fi
