@@ -13,7 +13,7 @@ from the Tails source directory.
 
 Options:
   --capture=FILE     Captures the test session into FILE using VP8 encoding.
-                     Requires ffmpeg and libvpx0.
+                     Requires ffmpeg and libvpx1.
   --keep-snapshots   Don't ever delete the background snapshots. This can a big
                      time saver when debugging new features.
   --temp-dir         Directory where various temporary files are written
@@ -35,7 +35,8 @@ error() {
 }
 
 check_dependency() {
-    if ! which "${1}" >/dev/null && ! dpkg -s "${1}" >/dev/null 2>&1; then
+    if ! which "${1}" >/dev/null && \
+       ! dpkg -s "${1}" 2>/dev/null | grep -q "^Status:.*installed"; then
         error "'${1}' is missing, please install it and run again. Aborting..."
     fi
 }
@@ -81,7 +82,7 @@ start_vnc_viewer() {
 
 capture_session() {
     check_dependency ffmpeg
-    check_dependency libvpx0
+    check_dependency libvpx1
     echo "Capturing guest display into ${CAPTURE_FILE}"
     ffmpeg -f x11grab -s 1024x768 -r 15 -i ${TARGET_DISPLAY}.0 -an \
         -vcodec libvpx -y "${CAPTURE_FILE}" >/dev/null 2>&1 &
