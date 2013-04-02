@@ -284,19 +284,6 @@ features properly do their work; second, our `torrc` sets the right
 * can a bug report e-mail be sent?
 * is it correctly encrypted?
 
-# GnuPG
-
-`[needs-review, needs-pass: torified_gnupg]`
-
-Those tests shall be run using GnuPG from the command-line and through
-the Seahorse GUI:
-
-* key search/receive: torified? going to the configured keyserver?
- - `gpg --search` tells what server it is connecting to
- - the connection to the configured keyserver must appear in Vidalia's
-   list of connections
- - if you run a keyserver, have a look there.
-
 # Monkeysphere
 
 * Monkeysphere validation agent key search/receive: torified? uses
@@ -338,11 +325,11 @@ process that is worth [[a dedicated page|test/erase_memory_on_shutdown]].
 * Check you can login as root neither with the `amnesia` password nor
   with the `live` one.
 * Boot Tails without setting a password and check you can't get
-  PolicyKit administrative privileges (e.g. change internal hard
-  disks in the Disk Utility), neither with the `amnesia` password nor
-  with the `live` one. `[needs-fix: root_access_control]`
+  PolicyKit administrative privileges (e.g. run a command with pkexec),
+  neither with the `amnesia` password nor
+  with the `live` one. `[needs-review: root_access_control]`
 * Boot Tails with a password and check you can get PolicyKit
-  administrative privileges. `[needs-fix: root_access_control]`
+  administrative privileges. `[needs-review: root_access_control]`
 * Check that the $TAILS_USER_PASSWORD variable, if still existing in the system
   environment after the boot has finished, does not contain the clear text
   password.
@@ -350,6 +337,7 @@ process that is worth [[a dedicated page|test/erase_memory_on_shutdown]].
 # Virtualization support
 
 * `modinfo vboxguest` should work when booted on the 686-pae kernel
+  `[needs-review, needs-pass: checks]`
 * test in VirtualBox `[can't-automate?]`
 
 # I2P
@@ -385,10 +373,6 @@ process that is worth [[a dedicated page|test/erase_memory_on_shutdown]].
 
 # APT
 
-* Make sure APT is configured to point to
-  ftp.us.debian.org. `[needs-review, needs-pass: apt]`
-* Doing an apt-get update and installing random
-  packages. `[needs-review, needs-pass: apt]`
 * Make sure the Tails repository suite matching the release tag is in
   APT sources.
 * Make sure the Tails repository unversioned suites (e.g. `testing`,
@@ -410,7 +394,7 @@ After each of the following tests:
 Tests to run:
 
 * Test "Clone & Install":
-  - from DVD. `[needs-review, needs-pass: usb_install]`
+  - from DVD. `[needs-review: usb_install]`
   - from USB. `[needs-review, needs-pass: usb_install]`
   - onto a USB stick that has a MBR partition table, and no
     partition at all (regression test)

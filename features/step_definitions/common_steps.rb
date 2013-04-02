@@ -353,11 +353,24 @@ When /^I run "([^"]*)"$/ do |program|
   @screen.type(program + Sikuli::KEY_RETURN)
 end
 
+Given /^I enter the sudo password in the gksu prompt$/ do
+  next if @skip_steps_while_restoring_background
+  @screen.wait('GksuAuthPrompt.png', 60)
+  sleep 1 # wait for weird fade-in to unblock the "Ok" button
+  @screen.type(@sudo_password)
+  @screen.type(Sikuli::KEY_RETURN)
+  @screen.waitVanish('GksuAuthPrompt.png', 10)
+end
+
 Given /^I enter the sudo password in the PolicyKit prompt$/ do
+  step "I enter the \"#{@sudo_password}\" password in the PolicyKit prompt"
+end
+
+Given /^I enter the "([^"]*)" password in the PolicyKit prompt$/ do |password|
   next if @skip_steps_while_restoring_background
   @screen.wait('PolicyKitAuthPrompt.png', 60)
   sleep 1 # wait for weird fade-in to unblock the "Ok" button
-  @screen.type(@sudo_password)
+  @screen.type(password)
   @screen.type(Sikuli::KEY_RETURN)
   @screen.waitVanish('PolicyKitAuthPrompt.png', 10)
 end
@@ -366,6 +379,12 @@ Given /^process "([^"]+)" is running$/ do |process|
   next if @skip_steps_while_restoring_background
   assert(@vm.has_process?(process),
          "Process '#{process}' is not running")
+end
+
+Given /^process "([^"]+)" is not running$/ do |process|
+  next if @skip_steps_while_restoring_background
+  assert(!@vm.has_process?(process),
+         "Process '#{process}' is running")
 end
 
 Given /^I have killed the process "([^"]+)"$/ do |process|
@@ -382,11 +401,11 @@ Given /^I shutdown Tails$/ do
   @screen.wait_and_click('TailsEmergencyShutdownButton.png', 10)
   @screen.hide_cursor
   @screen.wait_and_click('TailsEmergencyShutdownHalt.png', 10)
-  try_for(120, :msg => "VM is still running") { ! @vm.is_running? }
+  try_for(360, :msg => "VM is still running") { ! @vm.is_running? }
 end
 
 Given /^package "([^"]+)" is installed$/ do |package|
   next if @skip_steps_while_restoring_background
-  assert(@vm.execute("dpkg -s #{package}").success?,
+  assert(@vm.execute("dpkg -s '#{package}' 2>/dev/null | grep -qs '^Status:.*installed$'").success?,
          "Package '#{package}' is not installed")
 end

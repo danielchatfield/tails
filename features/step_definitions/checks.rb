@@ -7,12 +7,12 @@ Then /^the shipped Tails signing key is not outdated$/ do
   key_url = "https://tails.boum.org/tails-signing.key"
   @vm.execute("curl --silent --socks5-hostname localhost:9062 " +
               "#{key_url} -o #{fresh_sig_key}", $live_user)
-  @vm.execute("gpg --no-default-keyring --keyring #{tmp_keyring} " +
+  @vm.execute("gpg --batch --no-default-keyring --keyring #{tmp_keyring} " +
               "--import #{fresh_sig_key}", $live_user)
   fresh_sig_key_info =
-    @vm.execute("gpg --no-default-keyring --keyring #{tmp_keyring} " +
+    @vm.execute("gpg --batch --no-default-keyring --keyring #{tmp_keyring} " +
                 "--list-key #{sig_key_fingerprint}", $live_user).stdout
-  shipped_sig_key_info = @vm.execute("gpg --list-key #{sig_key_fingerprint}",
+  shipped_sig_key_info = @vm.execute("gpg --batch --list-key #{sig_key_fingerprint}",
                                      $live_user).stdout
   assert(shipped_sig_key_info == fresh_sig_key_info,
          "The Tails signing key shipped inside Tails is outdated:\n" +
@@ -68,8 +68,6 @@ Then /^no unexpected services are listening for network connections$/ do
   next if @skip_steps_while_restoring_background
   netstat_cmd = @vm.execute("netstat -ltupn")
   assert netstat_cmd.success?
-  exceptions = [["cupsd", "0.0.0.0", "631"],
-                ["dhclient", "0.0.0.0", "68"]]
   for line in netstat_cmd.stdout.chomp.split("\n") do
     splitted = line.split(/[[:blank:]]+/)
     proto = splitted[0]
@@ -84,7 +82,7 @@ Then /^no unexpected services are listening for network connections$/ do
     proc = splitted[proc_index].split("/")[1]
     # Services listening on loopback is not a threat
     if /127(\.[[:digit:]]{1,3}){3}/.match(laddr).nil?
-      if exceptions.include? [proc, laddr, lport]
+      if $services_expected_on_all_ifaces.include? [proc, laddr, lport]
         puts "Service '#{proc}' is listening on #{laddr}:#{lport} " +
              "but has an exception"
       else
@@ -92,6 +90,18 @@ Then /^no unexpected services are listening for network connections$/ do
       end
     end
   end
+end
+
+When /^Tails has booted a 686-pae kernel$/ do
+  next if @skip_steps_while_restoring_background
+  assert(@vm.execute("uname -r | grep -qs '686-pae$'").success?,
+         "Tails has not booted a 686-pae kernel.")
+end
+
+Then /^the VirtualBox guest modules are available$/ do
+  next if @skip_steps_while_restoring_background
+  assert(@vm.execute("modinfo vboxguest").success?,
+         "The vboxguest module is not available.")
 end
 
 def shared_pdf_dir_on_guest

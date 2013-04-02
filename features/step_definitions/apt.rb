@@ -1,15 +1,13 @@
 require 'uri'
 
-Given /^APT's sources are only \{ftp.us,security,backports\}\.debian\.org$/ do
+Given /^the only hosts in APT sources are "([^"]*)"$/ do |hosts_str|
   next if @skip_steps_while_restoring_background
-  @vm.execute("cat /etc/apt/sources.list").stdout.chomp.each_line { |line|
+  hosts = hosts_str.split(',')
+  @vm.execute("cat /etc/apt/sources.list /etc/apt/sources.list.d/*").stdout.chomp.each_line { |line|
     next if ! line.start_with? "deb"
-    source = line.split[1]
-    source_host = URI(source).host
-    if source_host != "ftp.us.debian.org" and \
-       source_host != "security.debian.org" and \
-       source_host != "backports.debian.org"
-      raise "Bad APT source '#{source}'"
+    source_host = URI(line.split[1]).host
+    if !hosts.include?(source_host)
+      raise "Bad APT source '#{line}'"
     end
   }
 end
@@ -36,18 +34,19 @@ Then /^I should be able to install a package using apt-get$/ do
   step "package \"#{package}\" is installed"
 end
 
-When /^I update APT using synaptic$/ do
-  # Upon start the interface will be frozen while synaptic loads the
-  # package list
-  try_for(20, :msg => "Failed to click the Synaptic 'Reload' button") {
-    # Note: here we want to spam clicks, so we don't use wait_and_click()
-    @screen.click('SynapticReload.png')
+When /^I update APT using Synaptic$/ do
+  # Upon start the interface will be frozen while Synaptic loads the
+  # package list. Since the frozen GUI is so similar to the unfrozen
+  # one there's no easy way to reliably wait for the latter. Hence we
+  # spam reload until it's performed, which is easier to detect.
+  try_for(20, :msg => "Failed to reload the package list in Synaptic") {
+    @screen.type("r", Sikuli::KEY_CTRL)
+    @screen.find('SynapticReloadPrompt.png')
   }
-  @screen.wait('SynapticReloadPrompt.png', 20)
   @screen.waitVanish('SynapticReloadPrompt.png', 30*60)
 end
 
-Then /^I should be able to install a package using synaptic$/ do
+Then /^I should be able to install a package using Synaptic$/ do
   package = "cowsay"
   # We do this after a Reload, so the interface will be frozen until
   # the package list has been loaded
