@@ -31,7 +31,8 @@ end
 def usb_install_helper(name)
   @screen.wait('USBCreateLiveUSB.png', 10)
 
-  # FIXME: here we should select USB drive using #{name}
+  # Here we'd like to select USB drive using #{name}, but Sikuli's
+  # OCR seems to be too unreliable.
 #  @screen.wait('USBTargetDevice.png', 10)
 #  match = @screen.find('USBTargetDevice.png')
 #  region_x = match.x
@@ -252,17 +253,6 @@ Given /^persistence has been enabled$/ do
       end
     end
   }
-end
-
-Given /^the computer is setup up to boot from USB drive "([^"]+)"$/ do |name|
-  next if @skip_steps_while_restoring_background
-  @vm.set_usb_boot(name)
-end
-
-Then /^Tails seems to have booted normally$/ do
-  next if @skip_steps_while_restoring_background
-  # FIXME: Something more we should check for?
-  step "GNOME has started"
 end
 
 def boot_device

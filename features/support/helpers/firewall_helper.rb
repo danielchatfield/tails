@@ -6,7 +6,8 @@ class IPAddr
   PrivateIPv4Ranges = [
     IPAddr.new("10.0.0.0/8"),
     IPAddr.new("172.16.0.0/12"),
-    IPAddr.new("192.168.0.0/16")
+    IPAddr.new("192.168.0.0/16"),
+    IPAddr.new("255.255.255.255/32")
   ]
 
   PrivateIPv6Ranges = [
@@ -49,8 +50,11 @@ class FirewallLeakCheck
         ipv4_nontcp_packets << PacketFu::IPPacket.parse(p)
       elsif PacketFu::IPv6Packet.can_parse?(p)
         ipv6_packets << PacketFu::IPv6Packet.parse(p)
+      elsif PacketFu::Packet.can_parse?(p)
+        nonip_packets << PacketFu::Packet.parse(p)
       else
-        nonip_packets << p
+        save_pcap_file
+        raise "Found something in the pcap file that cannot be parsed"
       end
     end
     ipv4_tcp_hosts = get_public_hosts_from_ippackets ipv4_tcp_packets
@@ -67,12 +71,14 @@ class FirewallLeakCheck
     hosts = []
     packets.each do |p|
       candidate = nil
-      # TCPPacket is not a subclass of IPPacket. Ugly!
-      if p.instance_of?(PacketFu::IPPacket) or
-          p.instance_of?(PacketFu::TCPPacket)
+      if p.kind_of?(PacketFu::IPPacket)
         candidate = p.ip_daddr
-      elsif p.instance_of?(PacketFu::IPv6Packet)
+      elsif p.kind_of?(PacketFu::IPv6Packet)
         candidate = p.ipv6_header.ipv6_daddr
+      else
+        save_pcap_file
+        raise "Expected an IP{v4,v6} packet, but got something else:\n" +
+              p.peek_format
       end
       if candidate != nil and IPAddr.new(candidate).public?
         hosts << candidate

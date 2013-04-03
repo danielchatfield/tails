@@ -75,6 +75,11 @@ Given /^the computer is set to boot from the Tails DVD$/ do
   @vm.set_cdrom_boot($tails_iso)
 end
 
+Given /^the computer is set to boot from (.+?) drive "(.+?)"$/ do |type, name|
+  next if @skip_steps_while_restoring_background
+  @vm.set_disk_boot(name, type.downcase)
+end
+
 Given /^I plug ([[:alpha:]]+) drive "([^"]+)"$/ do |bus, name|
   next if @skip_steps_while_restoring_background
   @vm.plug_drive(name, bus.downcase)
@@ -159,9 +164,6 @@ end
 Given /^I log in to a new session$/ do
   next if @skip_steps_while_restoring_background
   @screen.wait_and_click('TailsGreeterLoginButton.png', 10)
-  # FIXME: Here we should do something which waits for all Tails
-  # Greeter post-hooks to finish so we can rid ourselves of steps like
-  # "Tails Greeter has dealt with the sudo password"
 end
 
 Given /^I enable more Tails Greeter options$/ do
@@ -206,6 +208,11 @@ Given /^GNOME has started$/ do
     desktop_started_picture = 'GnomeApplicationsMenu.png'
   end
   @screen.wait(desktop_started_picture, 180)
+end
+
+Then /^Tails seems to have booted normally$/ do
+  next if @skip_steps_while_restoring_background
+  step "GNOME has started"
 end
 
 Given /^I have a network connection$/ do
@@ -304,11 +311,7 @@ end
 
 Then /^all Internet traffic has only flowed through Tor$/ do
   next if @skip_steps_while_restoring_background
-  # This command will grab all router IP addresses from the Tor
-  # consensus in the VM.
-  cmd = 'awk "/^r/ { print \$6 }" /var/lib/tor/cached-microdesc-consensus'
-  tor_relays = @vm.execute(cmd).stdout.chomp.split("\n")
-  leaks = FirewallLeakCheck.new(@sniffer.pcap_file, tor_relays)
+  leaks = FirewallLeakCheck.new(@sniffer.pcap_file, get_tor_relays)
   if !leaks.empty?
     if !leaks.ipv4_tcp_leaks.empty?
       puts "The following IPv4 TCP non-Tor Internet hosts were contacted:"
@@ -328,9 +331,7 @@ Then /^all Internet traffic has only flowed through Tor$/ do
     if !leaks.nonip_leaks.empty?
       puts "Some non-IP packets were sent\n"
     end
-    pcap_copy = "#{$tmp_dir}/pcap_with_leaks-#{DateTime.now}"
-    FileUtils.cp(@sniffer.pcap_file, pcap_copy)
-    puts "Full network capture available at: #{pcap_copy}"
+    save_pcap_file
     raise "There were network leaks!"
   end
 end
