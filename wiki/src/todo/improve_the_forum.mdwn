@@ -11,6 +11,7 @@ Roadmap
 =======
 
 0. Test and report our findings about ask.torproject.org [[!taglink todo/test]]
+   - <https://trac.torproject.org/projects/tor/ticket/8603>
    - How are we going to filter Tails content?
    - Do we need to be granted special rights as Tails dev?
    - Comments to be made:
