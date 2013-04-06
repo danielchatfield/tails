@@ -102,7 +102,7 @@
     <entry>
       <key>ftp_port</key>
       <value>
-        <int>9050</int>
+        <int>9064</int>
       </value>
     </entry>
 
@@ -116,7 +116,7 @@
     <entry>
       <key>socks_port</key>
       <value>
-        <int>9050</int>
+        <int>9064</int>
       </value>
     </entry>
 
