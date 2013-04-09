@@ -1,4 +1,4 @@
-@product
+@product @uses_tor
 Feature: Time syncing
   As a Tails user
   I want Tor to work properly

@@ -1,4 +1,4 @@
-@product
+@product @uses_tor
 Feature: Various checks
 
   Background:
