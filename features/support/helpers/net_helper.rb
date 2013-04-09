@@ -14,10 +14,13 @@ class Sniffer
 
   attr_reader :name, :pcap_file, :pid
 
-  def initialize(name, bridge_name, mac)
+  def initialize(name, vmnet)
     @name = name
-    @bridge_name = bridge_name
-    @mac = mac
+    @vmnet = vmnet
+    @net = @vmnet.net
+    @bridge_name = @net.bridge_name
+    @mac = REXML::Document.new(@net.xml_desc).elements['network/ip/dhcp/host/'].attributes['mac']
+
     @pcap_file = "#{$tmp_dir}/#{name}.pcap"
   end
 
