@@ -114,8 +114,8 @@ Given /^I capture all network traffic$/ do
   # Note: We don't want skip this particular stpe if
   # @skip_steps_while_restoring_background is set since it starts
   # something external to the VM state.
-  @sniffer = Sniffer.new("TestSniffer", $vmnet)
-  @sniffer.capture
+  @custom_sniffer = Sniffer.new("custom_sniffer", $vmnet)
+  @custom_sniffer.capture
 end
 
 Given /^I set Tails to boot with options "([^"]*)"$/ do |options|
@@ -313,7 +313,7 @@ end
 
 Then /^all Internet traffic has only flowed through Tor$/ do
   next if @skip_steps_while_restoring_background
-  leaks = FirewallLeakCheck.new(@sniffer.pcap_file, get_tor_relays)
+  leaks = FirewallLeakCheck.new(@custom_sniffer.pcap_file, get_tor_relays)
   leaks.assert_no_leaks
 end
 

@@ -110,11 +110,24 @@ After('@product') do |scenario|
     base = File.basename(scenario.feature.file, ".feature").to_s
     @vm.take_screenshot("#{base}-#{DateTime.now}") if @vm
   end
-  if @sniffer
-    @sniffer.stop
-    @sniffer.clear
+  if @custom_sniffer
+    @custom_sniffer.stop
+    @custom_sniffer.clear
   end
   @vm.destroy if @vm
+end
+
+Before('@product', '@uses_tor') do |scenario|
+  feature_file_name = File.basename(scenario.feature.file, ".feature").to_s
+  @uses_tor_sniffer = Sniffer.new(feature_file_name + "_sniffer", $vmnet)
+  @uses_tor_sniffer.capture
+end
+
+After('@product', '@uses_tor') do
+  leaks = FirewallLeakCheck.new(@uses_tor_sniffer.pcap_file, get_tor_relays)
+  @uses_tor_sniffer.stop
+  leaks.assert_no_leaks
+  @uses_tor_sniffer.clear
 end
 
 
