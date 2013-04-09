@@ -76,11 +76,15 @@ BeforeFeature('@product') do |feature|
   end
   base = File.basename(feature.file, ".feature").to_s
   $background_snapshot = "#{$tmp_dir}/#{base}_background.state"
+  $virt = Libvirt::open("qemu:///system")
+  $vmnet = VMNet.new($virt, $vm_xml_path)
 end
 
 AfterFeature('@product') do
   delete_snapshot($background_snapshot) if !$keep_snapshots
   VM.storage.clear_volumes if VM.storage
+  $vmnet.destroy
+  $virt.close
 end
 
 # BeforeScenario
