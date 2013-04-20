@@ -5,7 +5,13 @@ import gtk
 import gettext
 import subprocess
 
-gettext.install("tails-about")
+try:
+    gettext.install("tails-about")
+except LookupError:
+    # Workaround error occuring with new PO files created by refresh-translations
+    # which contain the invalid charset "CHARSET"
+    _ = lambda x: x
+
 tails_version = subprocess.Popen(["tails-version"], stdout=subprocess.PIPE).communicate()[0]
 tails_main_version = tails_version.split("-")
 about_dialog = gtk.AboutDialog()
