@@ -67,20 +67,22 @@ def install_additional_packages():
         syslog.syslog("WARNING: no additional software configured, exiting.")
         return True
     do_activate()
-    packages_string = " ".join(get_additional_packages())
-    syslog.syslog("Will install the following packages: %s" % packages_string)
+    packages = get_additional_packages()
+    if not packages:
+	syslog.syslog("WARNING: no packages to install, exiting")
+        return True
+    syslog.syslog("Will install the following packages: %s" % " ".join(packages))
     apt_get_returncode = _launch_apt_get(["apt-get",
         "--quiet",
         "--no-remove",
         "--yes",
         "--option", "DPkg::Options::=--force-confold", 
-        "install",
-        packages_string])
+        "install"] + packages)
     if apt_get_returncode: 
-        syslog.syslog("WARNING: installation of %s failed" % packages_string)
+        syslog.syslog("WARNING: installation of %s failed" % " ".join(packages))
         return False
     else:
-        syslog.syslog("Install completed successfully")
+        syslog.syslog("Installation completed successfully.")
         return True
 
 def upgrade_additional_packages():
@@ -95,16 +97,16 @@ def upgrade_additional_packages():
         "update"])
     if apt_get_returncode:
         syslog.syslog("WARNING: the update failed.")
-        _notify(_("Tails additional software"),
-             _("The update failed. That might be due to network issues. You can find more informations in the system log."))
+        _notify(_("Your additional software"),
+             _("The upgrade failed. This might be due to a network problem. You may want to check your network connexion of restart Tails. It the problem persist, please report a bug."))
         return False
     if install_additional_packages():
-        _notify(_("Tails additional software"),
-            _("The upgrade was successful"))
+        _notify(_("Your additional software"),
+             _("The installation was successful."))
         return True
     else:
-        _notify(_("Tails additional software"),
-            _("The upgrade failed. That might be due to network issues. You can find more informations in the system log."))
+        _notify(_("Your additional software"),
+             _("The upgrade failed. This might be due to a network problem. You may want to check your network connexion of restart Tails. It the problem persist, please report a bug."))
         return False
 
 def check_activation():
