@@ -2,7 +2,9 @@
 
 import gettext
 import syslog
+import os
 import os.path
+import stat
 import sys
 import subprocess
 
@@ -63,17 +65,63 @@ def has_additional_packages_list():
     """
     return os.path.isfile(PACKAGES_LIST_FILE)
 
+def _is_path_safe(path):
+    """Verify that loading a packagelist from path is safe
+    """
+    checked_path = ""
+    check_path = os.path.realpath(path)
+    while check_path != checked_path:
+        # verify it's not a symlink
+        if os.path.islink(check_path):
+            syslog.syslog(syslog.LOG_WARNING,
+                "Skipping configuration in %s: "
+                "%s shouldn't be a symbolic link"
+                % (path, check_path))
+            return False
+        # verify owner is root
+        path_stat = os.stat(check_path)
+        if not path_stat.st_uid == 0:
+            syslog.syslog(syslog.LOG_WARNING,
+                "Skipping configuration in %s: "
+                "%s doesn't belong to root"
+                % (path, check_path))
+            return False
+        # verify mode
+        path_mode = stat.S_IMODE(path_stat.st_mode)
+        if check_path == PERSISTENCE_DIR:
+            expected_mode = 0775
+        elif os.path.isfile(check_path):
+            expected_mode = 0644
+        elif os.path.isdir(check_path):
+            expected_mode = 0755
+        else:
+            syslog.syslog(syslog.LOG_WARNING,
+                "Skipping configuration in %s: %s is not a file nor a directory"
+                % (path, check_path))
+            return False
+        if not path_mode == expected_mode:
+            syslog.syslog(syslog.LOG_WARNING,
+                "Skipping configuration in %s: "
+                "%s mode is %o but should be %o"
+                % (path, check_path, path_mode, expected_mode))
+            return False
+        # check parent path
+        checked_path = check_path
+        check_path, ignored = os.path.split(check_path)
+    return True
+
 def get_additional_packages():
     """Returns the list of all the additional packages
     """
     if not has_additional_packages_list():
         return None
     packages = []
-    with open(PACKAGES_LIST_FILE) as f:
-        for line in f:
-            line = line.strip()
-            if line: packages.append(line)
-    f.closed
+    if _is_path_safe(PACKAGES_LIST_FILE):
+        with open(PACKAGES_LIST_FILE) as f:
+            for line in f:
+                line = line.strip()
+                if line: packages.append(line)
+        f.closed
     return packages
 
 def install_additional_packages():
