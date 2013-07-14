@@ -58,7 +58,7 @@
 	</account>
 	<account>
 		<protocol>prpl-irc</protocol>
-		<name>XXX_NICK_XXX@chat.wikileaks.de</name>
+		<name>XXX_NICK_XXX@isax7s5yooqgelbr.onion</name>
 		<statuses>
 			<status type='available' name='Available' active='true'>
 				<attributes/>
