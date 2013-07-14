@@ -65,12 +65,13 @@ def has_additional_packages_list():
     """
     return os.path.isfile(PACKAGES_LIST_FILE)
 
-def _is_path_safe(path):
+def _is_path_safe(path, upto="/"):
     """Verify that loading a packagelist from path is safe
     """
     checked_path = ""
     check_path = os.path.realpath(path)
-    while check_path != checked_path:
+    upto = os.path.realpath(upto)
+    while check_path != upto:
         # verify it's not a symlink
         if os.path.islink(check_path):
             syslog.syslog(syslog.LOG_WARNING,
@@ -106,7 +107,6 @@ def _is_path_safe(path):
                 % (path, check_path, path_mode, expected_mode))
             return False
         # check parent path
-        checked_path = check_path
         check_path, ignored = os.path.split(check_path)
     return True
 
