@@ -53,16 +53,14 @@ on this. Nor did I find any existing custom greeter for GDM 3.x.
         condition to do so is true) in the gdm session.
 
 ... so perhaps that would be all that's needed to have our
-greeter started?
+greeter started? Incidentally, this last-minute patch for Wheezy gets
+accessibility back.
 
 Also see the *Custom greeter* thread on tails-dev (early April 2013);
 quoting Ray Strode there:
 
 > Here's the commit where the fallback greeter got ported to the new api:
 > <https://git.gnome.org/browse/gdm/commit/gui/simple-greeter?id=1ec0665b631965b8c73277374dddde8b1d8b6d1e>
-
-Incidentally, this last-minute patch for Wheezy gets
-accessibility back.
 
 lightdm
 -------
@@ -139,3 +137,18 @@ Here's some initial archived research in this area:
 * Arbitrary data can be passed from the pywebkit greeter as arguments
   to JS functions, once serialized in JSON, using the WebKit
   `execute_script` method.
+
+GDM migration
+=============
+
+Setup
+-----
+
+	apt-get install gdm3 gtk2-engines
+	dpkg -i --force-all tails-greeter*.deb
+	ln -s /bin/true /usr/local/sbin/live-persist
+
+TODO
+----
+
+* Keep in sync' with the Squeeze version.

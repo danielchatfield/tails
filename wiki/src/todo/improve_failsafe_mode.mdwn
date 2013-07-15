@@ -1,7 +1,9 @@
-The failsafe mode could be made more failsafe. Candidates:
+The failsafe mode could be made more failsafe.
 
-- disable ACPI, etc.
-- relatively common videocards require nomodeset boot option
-- more?
+(Parent ticket.)
 
-[[!tag todo/code todo/easy todo/research]]
+Resources
+=========
+
+* In live-build 3.x, one can customize failsafe options with
+  `--bootappend-live-failsafe`.
