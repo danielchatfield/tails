@@ -1,5 +1,11 @@
 [[!meta title="Provide needed input to developers"]]
 
+# Test our release candidates
+
+[[!inline pages="contribute/how/testing" raw="yes"
+
+# Help to draft new features
+
 Some Tails planned features require initial tests, thought and/or
 discussion before actual implementation work can start. You may want
 to contribute to this effort.
