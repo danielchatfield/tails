@@ -17,15 +17,11 @@ class Sniffer
   def initialize(name, vmnet)
     @name = name
     @vmnet = vmnet
-    @net = @vmnet.net
-    @bridge_name = @net.bridge_name
-    @mac = REXML::Document.new(@net.xml_desc).elements['network/ip/dhcp/host/'].attributes['mac']
-
     @pcap_file = "#{$tmp_dir}/#{name}.pcap"
   end
 
-  def capture(filter="ether src host #{@mac} and not ether proto \\arp and not ether proto \\rarp")
-    job = IO.popen("/usr/sbin/tcpdump -n -i #{@bridge_name} -w #{@pcap_file} -U '#{filter}' >/dev/null 2>&1")
+  def capture(filter="ether src host #{@vmnet.mac} and not ether proto \\arp and not ether proto \\rarp")
+    job = IO.popen("/usr/sbin/tcpdump -n -i #{@vmnet.bridge_name} -w #{@pcap_file} -U '#{filter}' >/dev/null 2>&1")
     @pid = job.pid
   end
 

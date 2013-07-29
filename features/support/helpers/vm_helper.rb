@@ -36,12 +36,25 @@ class VMNet
     @net.undefine
   end
 
+  def ip
+    net_xml = REXML::Document.new(@net.xml_desc)
+    net_xml.elements['network/ip/dhcp/host/'].attributes['ip']
+  end
+
+  def mac
+    net_xml = REXML::Document.new(@net.xml_desc)
+    net_xml.elements['network/ip/dhcp/host/'].attributes['mac']
+  end
+
+  def bridge_name
+    @net.bridge_name
+  end
 end
 
 
 class VM
 
-  attr_reader :domain, :display, :ip, :mac, :vmnet, :storage
+  attr_reader :domain, :display, :vmnet, :storage
 
   def initialize(virt, xml_path, vmnet, storage, x_display)
     @virt = virt
@@ -50,11 +63,6 @@ class VM
     @storage = storage
     default_domain_xml = File.read("#{@xml_path}/default.xml")
     update(default_domain_xml)
-
-    net_xml = REXML::Document.new(@vmnet.net.xml_desc)
-    @ip  = net_xml.elements['network/ip/dhcp/host/'].attributes['ip']
-    @mac = net_xml.elements['network/ip/dhcp/host/'].attributes['mac']
-
     @display = Display.new(@domain_name, x_display)
     set_cdrom_boot($tails_iso)
     plug_network
