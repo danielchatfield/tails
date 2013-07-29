@@ -69,7 +69,7 @@ class FirewallLeakCheck
   def save_pcap_file
     pcap_copy = "#{@pcap_file}-#{DateTime.now}"
     FileUtils.cp(@pcap_file, pcap_copy)
-    puts "Full network capture available at: #{pcap_copy}"
+    pcap_copy
   end
 
   # Returns a list of all unique non-LAN destination IP addresses
@@ -83,9 +83,10 @@ class FirewallLeakCheck
       elsif p.kind_of?(PacketFu::IPv6Packet)
         candidate = p.ipv6_header.ipv6_daddr
       else
-        save_pcap_file
+        dump_path = save_pcap_file
         raise "Expected an IP{v4,v6} packet, but got something else:\n" +
-              p.peek_format
+              "#{p.peek_format}\n" +
+              "Full network dump available at: #{dump_path}"
       end
       if candidate != nil and IPAddr.new(candidate).public?
         hosts << candidate
@@ -106,26 +107,24 @@ class FirewallLeakCheck
 
   def assert_no_leaks
     if !empty?
+      msg = ""
       if !ipv4_tcp_leaks.empty?
-        puts "The following IPv4 TCP non-Tor Internet hosts were contacted:"
-        puts ipv4_tcp_leaks.join("\n")
-        puts
+        msg += "The following IPv4 TCP non-Tor Internet hosts were contacted:\n"
+        msg += ipv4_tcp_leaks.join("\n") + "\n"
       end
       if !ipv4_nontcp_leaks.empty?
-        puts "The following IPv4 non-TCP Internet hosts were contacted:"
-        puts ipv4_nontcp_leaks.join("\n")
-        puts
+        msg += "The following IPv4 non-TCP Internet hosts were contacted:\n"
+        msg += ipv4_nontcp_leaks.join("\n") + "\n"
       end
       if !ipv6_leaks.empty?
-        puts "The following IPv6 Internet hosts were contacted:"
-        puts ipv6_leaks.join("\n")
-        puts
+        msg += "The following IPv6 Internet hosts were contacted:\n"
+        msg += ipv6_leaks.join("\n") + "\n"
       end
       if !nonip_leaks.empty?
-        puts "Some non-IP packets were sent\n"
+        msg += "Some non-IP packets were sent\n"
       end
-      save_pcap_file
-      raise "There were network leaks!"
+      dump_path = save_pcap_file
+      raise msg + "Full network dump available at: #{dump_path}"
     end
   end
 
