@@ -14,6 +14,9 @@ class VMNet
     raise e
   end
 
+  # Used internally to clean up previous created networks same name.
+  # We lookup by name so we also catch networks from previous test
+  # suite runs that weren't properly cleaned up (e.g. aborted).
   def clean_up
     begin
       net = @virt.lookup_network_by_name(@net_name)
@@ -49,6 +52,9 @@ class VMNet
   def bridge_name
     @net.bridge_name
   end
+
+  private :clean_up
+
 end
 
 
