@@ -60,20 +60,30 @@ def _(string):
         return string
 
 # The right panel help (HTML string)
+# TRANSLATORS: this text is copied straight from the Tails documentation (https://tails.boum.org/doc/first_steps/bug_reporting/), so it may be translated there already.
 html_help = _(
 """<h1>Help us fix your bug!</h1>
-<p>Read <a href="%s">our bug reporting instructions</a>.</p>
+<h2>How to write a useful bug report</h2>
+<ul>
+<li>The first aim of a bug report is to <strong>tell the developers exactly
+how to reproduce the failure</strong>.</li>
+<li>If that is not possible, try to <strong>describe what went wrong in
+detail</strong>. Write down the error messages, especially if they have
+numbers.</li>
+<li>Write <strong>clearly and be precise</strong>. Say what you mean, and make
+sure it cannot be misinterpreted.</li>
+<li>Be ready to provide extra information if the developers need it. If they
+did not need it, they would not be asking for it.</li>
+</ul>
+<p>Please read <a href="%s">our bug reporting instructions</a> for details.</p>
 <p><strong>Do not include more personal information than
 needed!</strong></p>
-<h2>About giving us an email address</h2>
-<p>If you don't mind disclosing some bits of your identity
-to Tails developers, you can provide an email address to
-let us ask more details about the bug. Additionally entering
-a public PGP key enables us to encrypt such future
-communication.</p>
-<p>Anyone who can see this reply will probably infer you are
-a Tails user. Time to wonder how much you trust your
-Internet and mailbox providers?</p>
+<h2>Optional email address</h2>
+<p>Giving us an email address allows us to contact you to clarify the
+problem. But it also provides an opportunity for eavesdroppers, like
+your email or Internet provider, to confirm that you are using Tails.</p>
+<p>You can also indicate an OpenPGP key corresponding to this email
+address, which will allow us to encrypt future communication.</p>
 """) % __get_localised_doc_link()
 
 # ENCRYPTION
