@@ -9,7 +9,7 @@ Tor circuits lengthen the connections
 
 Tor provides anonymity by building circuits with three relays. So
 instead of connecting directly to the destination server, a connection
-is made between each relay of the circuit and thus takes more time.
+is made between each relay of the circuit and this takes more time.
 
 Furthermore, Tor tries to build circuits with relays in different
 countries which make connection travel more and appear slower.
