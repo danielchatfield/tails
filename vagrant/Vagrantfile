@@ -22,24 +22,20 @@ $:.unshift File.expand_path('../lib', __FILE__)
 require 'vagrant_verified_download'
 require 'tails_build_settings'
 
-if ENV['TAILS_RAM_BUILD']
-  mem_size = VM_MEMORY_FOR_RAM_BUILDS
-else
-  mem_size = VM_MEMORY_FOR_DISK_BUILDS
-end
-
-cpus = ENV['TAILS_BUILD_CPUS']
-
-Vagrant::Config.run do |config|
-  config.vm.box = 'tails'
-
-  config.vm.box_url = 'http://dl.amnesia.boum.org/tails/project/vagrant/squeeze.box'
-  config.vm.box_checksum = 'ffb3f68f55a3458e007b9abed3eac057f71c518713fcdf982b78f8b59e28318e'
-
+Vagrant.configure("2") do |config|
+  config.vm.box = "tails-builder"
+  config.vm.box_url = 'http://dl.amnesia.boum.org/tails/project/vagrant/squeeze-libvirt-v1.box'
+  config.vm.box_checksum = '33c57cb4784abf1b8508c64f9e32456e237a7b346b393a40cfa64a6ae65e5433'
   config.vm.provision :shell, :inline => "http_proxy='#{ENV['http_proxy']}' /vagrant/provision/setup-tails-builder"
 
-  config.vm.share_folder 'amnesia', '/amnesia.git', '../.git'
-
-  config.vm.customize ['modifyvm', :id, '--memory', mem_size]
-  config.vm.customize ['modifyvm', :id, '--cpus', cpus] unless cpus.nil?
+  config.vm.provider :libvirt do |libvirt|
+    libvirt.driver = "qemu"
+    libvirt.storage_pool_name = "default"
+    if ENV['TAILS_RAM_BUILD']
+      libvirt.memory = VM_MEMORY_FOR_RAM_BUILDS.to_i
+    else
+      libvirt.memory = VM_MEMORY_FOR_DISK_BUILDS.to_i
+    end
+    libvirt.cpus = ENV['TAILS_BUILD_CPUS'].to_i
+  end
 end

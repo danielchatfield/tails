@@ -74,9 +74,9 @@ else
 	# Build triggered by Vagrant
 	WORKSPACE=/home/vagrant/amnesia
 	ARTIFACTS_DIR=/vagrant
-	REV="${1:-$(git --git-dir=/amnesia.git name-rev --name-only HEAD)}"
-	COMMIT="$(git --git-dir=/amnesia.git rev-parse --verify "$REV")"
-	test -d "$WORKSPACE" || git clone /amnesia.git "$WORKSPACE"
+	REV="${1:-$(git --git-dir=/home/vagrant/amnesia.git name-rev --name-only HEAD)}"
+	COMMIT="$(git --git-dir=/home/vagrant/amnesia.git rev-parse --verify "$REV")"
+	test -d "$WORKSPACE" || git clone /home/vagrant/amnesia.git "$WORKSPACE"
 	cd "$WORKSPACE"
 	git fetch origin
 fi

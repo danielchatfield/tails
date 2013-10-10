@@ -41,26 +41,33 @@ EXTERNAL_HTTP_PROXY = ENV['http_proxy']
 # In-VM proxy URL
 INTERNEL_HTTP_PROXY = "http://#{VIRTUAL_MACHINE_HOSTNAME}:3142"
 
+def env
+  env = Vagrant::Environment.new(:cwd => VAGRANT_PATH,
+                                 :ui_class => Vagrant::UI::Basic)
+end
+
+def vm
+  env.machine(env.primary_machine_name, :libvirt)
+end
+
 def current_vm_memory
-  env = Vagrant::Environment.new(:cwd => VAGRANT_PATH, :ui_class => Vagrant::UI::Basic)
-  uuid = env.primary_vm.uuid
-  info = env.primary_vm.driver.execute 'showvminfo', uuid, '--machinereadable'
-  $1.to_i if info =~ /^memory=(\d+)/
+  vm.provider_config.memory
 end
 
 def current_vm_cpus
-  env = Vagrant::Environment.new(:cwd => VAGRANT_PATH, :ui_class => Vagrant::UI::Basic)
-  uuid = env.primary_vm.uuid
-  info = env.primary_vm.driver.execute 'showvminfo', uuid, '--machinereadable'
-  $1.to_i if info =~ /^cpus=(\d+)/
+  vm.provider_config.cpus
 end
 
 def vm_running?
-  env = Vagrant::Environment.new(:cwd => VAGRANT_PATH, :ui_class => Vagrant::UI::Basic)
-  env.primary_vm.state == :running
+  vm.state.id == :running
 end
 
-def enough_free_memory?
+# Unlike Virtualbox, KVM's memory ballooning doesn't automatically
+# shrink when the guest frees memory, so after a build the VM will be
+# using 6+ GiB of the host's memory, potentially making it look like
+# there's not enough memory any more. Therefore this function's result
+# should only be relied upon if the VM is off.
+def enough_free_memory_to_start_ram_builder_vm?
   return false unless RbConfig::CONFIG['host_os'] =~ /linux/i
 
   begin
@@ -91,7 +98,8 @@ task :parse_build_options do
   options = ''
 
   # Default to in-memory builds if there is enough RAM available
-  options += 'ram ' if enough_free_memory?
+  options += 'ram ' if enough_free_memory_to_start_ram_builder_vm? ||
+    (vm_running? && current_vm_memory < VM_MEMORY_FOR_RAM_BUILDS)
 
   # Use in-VM proxy unless an external proxy is set
   options += 'vmproxy ' unless EXTERNAL_HTTP_PROXY
@@ -111,7 +119,8 @@ task :parse_build_options do
     case opt
     # Memory build settings
     when 'ram'
-      unless vm_running? || enough_free_memory?
+      unless enough_free_memory_to_start_ram_builder_vm? ||
+          (vm_running? && current_vm_memory < VM_MEMORY_FOR_RAM_BUILDS)
         abort "Not enough free memory to do an in-memory build. Aborting."
       end
       ENV['TAILS_RAM_BUILD'] = '1'
@@ -193,20 +202,46 @@ task :validate_http_proxy do
   end
 end
 
+task :refresh_remote_tails_source => ['vm:up'] do
+  vm.communicate.execute("rm -Rf /home/vagrant/amnesia.git")
+  vm.communicate.upload("#{Dir.pwd}/.git", "/home/vagrant/amnesia.git")
+end
+
+task :validate_remote_tails_source do
+  local_commit = `git --git-dir=#{Dir.pwd}/.git rev-parse HEAD`
+  vagrant_commit = ""
+  status = vm.communicate.execute("git --git-dir=/home/vagrant/amnesia.git " +
+                                  "rev-parse HEAD",
+                                  :error_check => false) do |fd, data|
+    vagrant_commit = data
+  end
+  abort "Vagrant `git rev-parse` failed." if status != 0
+
+  if local_commit != vagrant_commit
+    abort "Mismatching HEAD in local and Vagrant Git repositories."
+  end
+end
+
 desc 'Build Tails'
-task :build => ['parse_build_options', 'ensure_clean_repository', 'validate_http_proxy', 'vm:up'] do
+task :build => ['parse_build_options', 'ensure_clean_repository', 'validate_http_proxy', 'vm:up', 'refresh_remote_tails_source', 'validate_remote_tails_source'] do
   exported_env = EXPORTED_VARIABLES.select { |k| ENV[k] }.
                   collect { |k| "#{k}='#{ENV[k]}'" }.join(' ')
 
-  env = Vagrant::Environment.new(:cwd => VAGRANT_PATH)
-  status = env.primary_vm.channel.execute("#{exported_env} build-tails",
-                                          :error_check => false) do |fd, data|
+  status = vm.communicate.execute("#{exported_env} build-tails",
+                                  :error_check => false) do |fd, data|
     (fd == :stdout ? $stdout : $stderr).write data
   end
 
   # Move build products to the current directory
-  FileUtils.mv Dir.glob("#{VAGRANT_PATH}/tails-*"),
-               File.expand_path('..', __FILE__), :force => true
+  vm.communicate.sudo("ls -1 /vagrant/tails-*.iso*",
+                         :error_check => false) do |fd, data|
+    if fd == :stdout
+      for f in data.split("\n")
+        vm.communicate.download(f, Dir.pwd)
+        vm.communicate.sudo("rm -f '#{f}'", :error_check => false)
+      end
+    end
+  end
 
   exit status
 end
@@ -214,8 +249,7 @@ end
 namespace :vm do
   desc 'Start the build virtual machine'
   task :up => ['parse_build_options', 'validate_http_proxy'] do
-    env = Vagrant::Environment.new(:cwd => VAGRANT_PATH, :ui_class => Vagrant::UI::Basic)
-    case env.primary_vm.state
+    case vm.state.id
     when :not_created
       # Do not use non-existant in-VM proxy to download the basebox
       if ENV['http_proxy'] == INTERNEL_HTTP_PROXY
@@ -268,7 +302,7 @@ namespace :vm do
         abort 'The virtual machine needs to be reloaded to change the number of CPUs. Aborting.'
       end
     end
-    result = env.cli('up')
+    result = env.cli('up', '--provider=libvirt')
     abort "'vagrant up' failed" unless result
 
     ENV['http_proxy'] = INTERNEL_HTTP_PROXY if restore_internal_proxy
@@ -276,21 +310,18 @@ namespace :vm do
 
   desc 'Stop the build virtual machine'
   task :halt do
-    env = Vagrant::Environment.new(:cwd => VAGRANT_PATH, :ui_class => Vagrant::UI::Basic)
     result = env.cli('halt')
     abort "'vagrant halt' failed" unless result
   end
 
   desc 'Re-run virtual machine setup'
   task :provision => ['parse_build_options', 'validate_http_proxy'] do
-    env = Vagrant::Environment.new(:cwd => VAGRANT_PATH, :ui_class => Vagrant::UI::Basic)
     result = env.cli('provision')
     abort "'vagrant provision' failed" unless result
   end
 
   desc 'Destroy build virtual machine (clean up all files)'
   task :destroy do
-    env = Vagrant::Environment.new(:cwd => VAGRANT_PATH, :ui_class => Vagrant::UI::Basic)
     result = env.cli('destroy', '--force')
     abort "'vagrant destroy' failed" unless result
   end
