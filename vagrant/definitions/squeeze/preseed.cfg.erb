@@ -40,7 +40,7 @@ d-i passwd/user-password-again password vagrant
 d-i user-setup/encrypt-home boolean false
 d-i user-setup/allow-password-weak boolean true
 
-# Add backports repository (for at least rubygems, puppet and virtualbox)
+# Add backports repository (for at least rubygems and puppet)
 d-i apt-setup/local0/repository string \
         http://backports.debian.org/debian-backports squeeze-backports main
 d-i apt-setup/local0/source boolean false
@@ -53,8 +53,7 @@ d-i pkgsel/include string \
         openssh-server \
         curl \
         rubygems/squeeze-backports \
-        puppet/squeeze-backports puppet-common/squeeze-backports \
-        virtualbox-guest-utils/squeeze-backports
+        puppet/squeeze-backports puppet-common/squeeze-backports
 
 # No need for an extra upgrade: it is a full net install
 d-i pkgsel/upgrade select none
