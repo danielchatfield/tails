@@ -8,6 +8,9 @@ import pwd
 import stat
 import sys
 import subprocess
+import textwrap
+
+import posix1e # ACL management
 
 PERSISTENCE_DIR="/live/persistence/TailsData_unlocked"
 PACKAGES_LIST_FILE= PERSISTENCE_DIR + "/live-additional-software.conf"
@@ -77,15 +80,25 @@ def _is_path_safe(path, upto="/"):
         if check_path == PERSISTENCE_DIR:
             expected_mode = 0775
             expected_uid = 0 # root
+            expected_acl = textwrap.dedent("""\
+                user::rwx
+                user:tails-persistence-setup:rwx
+                group::rwx
+                mask::rwx
+                other::r-x
+                """)
         elif check_path == PACKAGES_LIST_FILE:
-            expected_mode = 0644
+            expected_mode = 0600
             expected_uid = pwd.getpwnam('tails-persistence-setup').pw_uid
+            expected_acl = None
         elif os.path.isfile(check_path):
             expected_mode = 0644
             expected_uid = 0 # root
+            expected_acl = None
         elif os.path.isdir(check_path):
             expected_mode = 0755
             expected_uid = 0 # root
+            expected_acl = None
         else:
             syslog.syslog(syslog.LOG_WARNING,
                 "Skipping configuration in %s: %s is not a file nor a directory"
@@ -114,6 +127,28 @@ def _is_path_safe(path, upto="/"):
                 "%s mode is %o but should be %o"
                 % (path, check_path, path_mode, expected_mode))
             return False
+        # verify ACLs if relevant
+        try:
+            has_acl = posix1e.has_extended(check_path)
+        except IOError, e:
+            if e.errno == 95:
+                # ACL is not supported by the filesystem
+                has_acl = False
+                path_acl = None
+            else:
+                raise
+        if has_acl:
+            path_acl = str(posix1e.ACL(file=check_path))
+            if not path_acl == expected_acl:
+                syslog.syslog(syslog.LOG_WARNING,
+                    "skipping configuration in %s: "
+                    "%s acl is %s but should be %s"
+                    % (path,
+                       check_path,
+                       path_acl.replace('\n', ' '),
+                       expected_acl.replace('\n', ' '))
+                    )
+                return False
         # check parent path
         check_path, ignored = os.path.split(check_path)
     return True
