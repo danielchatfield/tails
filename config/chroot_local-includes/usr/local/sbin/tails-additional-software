@@ -111,13 +111,13 @@ def _is_path_safe(path, upto="/"):
                 "%s shouldn't be a symbolic link"
                 % (path, check_path))
             return False
-        # verify owner is root
+        # verify owner
         path_stat = os.stat(check_path)
         if not path_stat.st_uid == expected_uid:
             syslog.syslog(syslog.LOG_WARNING,
                 "Skipping configuration in %s: "
-                "%s doesn't belong to root"
-                % (path, check_path))
+                "%s doesn't belong to %i"
+                % (path, check_path, expected_uid))
             return False
         # verify mode
         path_mode = stat.S_IMODE(path_stat.st_mode)
