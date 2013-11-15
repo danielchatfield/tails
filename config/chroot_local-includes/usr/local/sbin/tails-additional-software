@@ -67,7 +67,11 @@ def _notify(title, body):
 def has_additional_packages_list():
     """Return true iff PACKAGES_LIST_FILE exists
     """
-    return os.path.isfile(PACKAGES_LIST_FILE)
+    if (os.path.isfile(PACKAGES_LIST_FILE)
+            and _is_path_safe(PACKAGES_LIST_FILE)):
+        return True
+    else:
+        return False
 
 def _is_path_safe(path, upto="/"):
     """Verify that loading a packagelist from path is safe
@@ -159,12 +163,11 @@ def get_additional_packages():
     if not has_additional_packages_list():
         return None
     packages = []
-    if _is_path_safe(PACKAGES_LIST_FILE):
-        with open(PACKAGES_LIST_FILE) as f:
-            for line in f:
-                line = line.strip()
-                if line: packages.append(line)
-        f.closed
+    with open(PACKAGES_LIST_FILE) as f:
+        for line in f:
+            line = line.strip()
+            if line: packages.append(line)
+    f.closed
     return packages
 
 def install_additional_packages():
