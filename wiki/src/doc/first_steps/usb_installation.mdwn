@@ -48,7 +48,7 @@ Instructions
 6. To start the installation, click on the <span class="button">Create Live
 USB</span> button.
 
-7. Read the warning message in the pop-up window. Click on the <span
+7. Read the warning message in the dialog box. Click on the <span
    class="button">Yes</span> button to confirm.
 
 <div class="next">
