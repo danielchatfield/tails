@@ -107,6 +107,10 @@ Package: libstring-formatter-perl
 Pin: origin backports.debian.org
 Pin-Priority: 999
 
+Package: libsys-statistics-linux-perl
+Pin: origin backports.debian.org
+Pin-Priority: 999
+
 Package: libtest-simple-perl
 Pin: origin backports.debian.org
 Pin-Priority: 999
@@ -236,63 +240,63 @@ Pin: release o=Debian,a=unstable
 Pin-Priority: 999
 
 Package: linux-base
-Pin: release o=Debian,a=unstable
+Pin: release o=Debian,a=testing
 Pin-Priority: 999
 
 Package: linux-headers-486
-Pin: release o=Debian,a=unstable
+Pin: release o=Debian,a=testing
 Pin-Priority: 999
 
 Package: linux-headers-686-pae
-Pin: release o=Debian,a=unstable
+Pin: release o=Debian,a=testing
 Pin-Priority: 999
 
 Package: linux-headers-amd64
-Pin: release o=Debian,a=unstable
+Pin: release o=Debian,a=testing
 Pin-Priority: 999
 
-Package: linux-headers-3.10-3-common
-Pin: release o=Debian,a=unstable
+Package: linux-headers-3.11-2-common
+Pin: release o=Debian,a=testing
 Pin-Priority: 999
 
-Package: linux-headers-3.10-3-486
-Pin: release o=Debian,a=unstable
+Package: linux-headers-3.11-2-486
+Pin: release o=Debian,a=testing
 Pin-Priority: 999
 
-Package: linux-headers-3.10-3-686-pae
-Pin: release o=Debian,a=unstable
+Package: linux-headers-3.11-2-686-pae
+Pin: release o=Debian,a=testing
 Pin-Priority: 999
 
-Package: linux-headers-3.10-3-amd64
-Pin: release o=Debian,a=unstable
+Package: linux-headers-3.11-2-amd64
+Pin: release o=Debian,a=testing
 Pin-Priority: 999
 
 Package: linux-image-486
-Pin: release o=Debian,a=unstable
+Pin: release o=Debian,a=testing
 Pin-Priority: 999
 
 Package: linux-image-686-pae
-Pin: release o=Debian,a=unstable
+Pin: release o=Debian,a=testing
 Pin-Priority: 999
 
 Package: linux-image-amd64
-Pin: release o=Debian,a=unstable
+Pin: release o=Debian,a=testing
 Pin-Priority: 999
 
-Package: linux-image-3.10-3-486
-Pin: release o=Debian,a=unstable
+Package: linux-image-3.11-2-486
+Pin: release o=Debian,a=testing
 Pin-Priority: 999
 
-Package: linux-image-3.10-3-686-pae
-Pin: release o=Debian,a=unstable
+Package: linux-image-3.11-2-686-pae
+Pin: release o=Debian,a=testing
 Pin-Priority: 999
 
-Package: linux-image-3.10-3-amd64
-Pin: release o=Debian,a=unstable
+Package: linux-image-3.11-2-amd64
+Pin: release o=Debian,a=testing
 Pin-Priority: 999
 
-Package: linux-kbuild-3.10
-Pin: release o=Debian,a=unstable
+Package: linux-kbuild-3.11
+Pin: release o=Debian,a=testing
 Pin-Priority: 999
 
 Package: laptop-mode-tools
@@ -374,6 +378,10 @@ Pin-Priority: 1005
 
 Package: *
 Pin: release o=Debian,n=squeeze-updates
+Pin-Priority: 990
+
+Package: *
+Pin: release o=Debian,n=squeeze-proposed-updates
 Pin-Priority: 990
 
 Package: *
