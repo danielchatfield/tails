@@ -78,7 +78,8 @@ Update the distributed *base box*
 The *base box* on Tails mirrors is expected to lie at
 `project/vagrant/squeeze.box`.
 
-Do not forget to update the corresponding SHA256 sum in `vagrant/Vagrantfile`.
+Do not forget to update the corresponding SHA256 sum in
+`vagrant/lib/tails_build_settings.rb`.
 
 In details
 ----------
