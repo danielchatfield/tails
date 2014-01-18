@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-01-10 12:23+0100\n"
+"POT-Creation-Date: 2014-01-18 21:13+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -440,6 +440,14 @@ msgstr ""
 
 #: ../config/chroot_local-includes/usr/share/applications/tails-shutdown.desktop.in.h:2
 msgid "Immediately shut down computer"
+msgstr ""
+
+#: ../config/chroot_local-includes/usr/share/applications/tails-upgrader.desktop.in.h:1
+msgid "Tails Upgrader"
+msgstr ""
+
+#: ../config/chroot_local-includes/usr/share/applications/tails-upgrader.desktop.in.h:2
+msgid "Make sure Tails is up-to-date"
 msgstr ""
 
 #: ../config/chroot_local-includes/usr/share/applications/unsafe-browser.desktop.in.h:2

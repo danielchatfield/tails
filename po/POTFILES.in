@@ -19,5 +19,6 @@ config/chroot_local-includes/etc/skel/Desktop/Tails_documentation.desktop.in
 config/chroot_local-includes/usr/share/applications/i2p.desktop.in
 config/chroot_local-includes/usr/share/applications/tails-reboot.desktop.in
 config/chroot_local-includes/usr/share/applications/tails-shutdown.desktop.in
+config/chroot_local-includes/usr/share/applications/tails-upgrader.desktop.in
 config/chroot_local-includes/usr/share/applications/unsafe-browser.desktop.in
 config/chroot_local-includes/usr/share/desktop-directories/Tails.directory.in
