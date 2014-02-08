@@ -18,6 +18,7 @@ export old_persistence_list="nonexistent"
 
 # This will import the following functions and variables used below:
 #   activate_custom_mounts()
+#   drives()
 #   get_custom_mounts()
 #   open_luks_device()
 #   probe_for_gpt_name()
@@ -143,6 +144,11 @@ list_gpt_volumes ()
 
 	local whitelistdev=""
 	case "${PERSISTENCE_MEDIA}" in
+		bus=*)
+			want_bus="${PERSISTENCE_MEDIA#*=}"
+			whitelistdev="$(drives "" "" "${want_bus}")"
+			[ -z "${whitelistdev}" ] && return
+			;;
 		removable)
 			whitelistdev="$(removable_dev)"
 			[ -z "${whitelistdev}" ] && return
@@ -160,6 +166,22 @@ list_gpt_volumes ()
 				[ -z "${whitelistdev}" ] && return
 			else
 				whitelistdev=""
+				for parameter in $(cat /proc/cmdline)
+				do
+					case "$parameter" in
+						live-media=*|bootfrom=*)
+							LIVE_MEDIA="${$parameter#*=}"
+							case "${LIVE_MEDIA}" in
+								bus=*)
+									want_bus="${LIVE_MEDIA#*=}"
+									whitelistdev="$(drives "" "" "${want_bus}")"
+									[ -z "${whitelistdev}" ] && return
+								;;
+							esac
+							;;
+					esac
+				done
+
 			fi
 			;;
 	esac
