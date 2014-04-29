@@ -333,7 +333,7 @@ Then /^the boot device has safe access rights$/ do
     assert(dev_group == "disk" || dev_group == "root",
            "Boot device '#{dev}' owned by group '#{dev_group}', expected " +
            "'disk' or 'root'.")
-    assert(dev_perms == "660",
+    assert(dev_perms == "1660",
            "Boot device '#{dev}' has permissions '#{dev_perms}', expected '660'")
     for user, groups in all_users_with_groups do
       next if user == "root"
@@ -342,6 +342,10 @@ Then /^the boot device has safe access rights$/ do
              "owns boot device '#{dev}'")
     end
   end
+
+  info = @vm.execute("udisks --show-info #{super_boot_dev}").stdout
+  assert(info.match("^  system internal: +1$"),
+         "Boot device '#{super_boot_dev}' is not system internal for udisks")
 end
 
 Then /^persistent filesystems have safe access rights$/ do
