@@ -1,17 +1,31 @@
-[[!meta title="Calculating checksums"]]
+[[!meta title="Calculating checksums using GtkHash"]]
 
-You might need to calculate [[!wikipedia Checksum desc="checksums"]] to verify
-the integrity of a file, for instance a file that you downloaded from the
-Internet.
+[<span class="application">GtkHash</span>](http://gtkhash.sourceforge.net/)
+allows you to calculate [[!wikipedia checksum desc="checksums"]]. Checksums can
+be useful to verify the integrity of a file, for example, if you downloaded it
+from the Internet.
 
-You can use the [<span
-class="application">GtkHash</span>](http://gtkhash.sourceforge.net/)
-file manager extension to calculate the checksums for a file.
+To calculate the checksum of a file:
 
-Right click on a file's icon and select <span
-class="guimenuitem">Properties</span> in the context menu.
+  1. Open the <span class="application">Nautilus</span> file browser, either
+  from the <span class="guimenu">Places</span> menu or the <span
+  class="guilabel">Computer</span> icon on the desktop.
 
-In the window that pops up, activate the <span class="guilabel">Digests</span>
-tab. Check the <span class="guilabel">Hash Function</span>(s) you need and
-click the <span class="guilabel">Hash</span> button. Checksums will be
-displayer in the <span class="guilabel">Digest</span> column.
+  1. Navigate to the folder containing the file that you want to calculate the
+  checksum for.
+
+  1. Right-click on the file and choose <span class="guimenuitem">Properties</span>.
+
+  1. In the <span class="guimenuitem">Properties</span> dialog, click on the
+  <span class="guilabel">Digests</span> tab.
+
+     [[!img gtkhash.png link="no"]]
+
+  1. In the <span class="guilabel">Hash Function</span> column of the
+  <span class="guilabel">Digests</span> tabbed section, select the check boxes
+  corresponding to the checksums that you want to calculate.
+
+  1. Click on the <span class="button">Hash</span> button.
+
+  1. The calculated checksums appear in the <span class="guilabel">Digest</span>
+  column.
