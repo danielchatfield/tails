@@ -1,6 +1,6 @@
 def persistent_dirs
-  ["/home/#{$live_user}/.claws-mail",
-   "/home/#{$live_user}/.gconf/system/networking/connections",
+  ["/etc/NetworkManager/system-connections",
+   "/home/#{$live_user}/.claws-mail",
    "/home/#{$live_user}/.gnome2/keyrings",
    "/home/#{$live_user}/.gnupg",
    "/home/#{$live_user}/.mozilla/firefox/bookmarks",
@@ -55,12 +55,8 @@ def usb_install_helper(name)
 #  # when it should be /dev/sda1
 
   @screen.wait_and_click('USBCreateLiveUSB.png', 10)
-  begin
-    if @screen.find("USBSuggestsInstall.png")
-      raise ISOHybridUpgradeNotSupported
-    end
-  rescue FindFailed
-    # we didn't get the warning, so we can proceed with the install
+  if @screen.exists("USBSuggestsInstall.png")
+    raise ISOHybridUpgradeNotSupported
   end
   @screen.wait('USBCreateLiveUSBConfirmWindow.png', 10)
   @screen.wait_and_click('USBCreateLiveUSBConfirmYes.png', 10)
@@ -217,9 +213,23 @@ Then /^a Tails persistence partition with password "([^"]+)" exists on USB drive
   dev = @vm.disk_dev(name) + "2"
   check_part_integrity(name, dev, "crypto", "crypto_LUKS", "gpt", "TailsData")
 
-  c = @vm.execute("echo #{pwd} | cryptsetup luksOpen #{dev} #{name}")
-  assert(c.success?, "Couldn't open LUKS device '#{dev}' on  drive '#{name}'")
-  luks_dev = "/dev/mapper/#{name}"
+  # The LUKS container may already be opened, e.g. by udisks after
+  # we've run tails-persistence-setup.
+  c = @vm.execute("ls -1 /dev/mapper/")
+  if c.success?
+    for candidate in c.stdout.split("\n")
+      luks_info = @vm.execute("cryptsetup status #{candidate}")
+      if luks_info.success? and luks_info.stdout.match("^\s+device:\s+#{dev}$")
+        luks_dev = "/dev/mapper/#{candidate}"
+        break
+      end
+    end
+  end
+  if luks_dev.nil?
+    c = @vm.execute("echo #{pwd} | cryptsetup luksOpen #{dev} #{name}")
+    assert(c.success?, "Couldn't open LUKS device '#{dev}' on  drive '#{name}'")
+    luks_dev = "/dev/mapper/#{name}"
+  end
 
   # Adapting check_part_integrity() seems like a bad idea so here goes
   info = @vm.execute("udisks --show-info #{luks_dev}").stdout
@@ -431,9 +441,9 @@ Then /^only the expected files should persist on USB drive "([^"]+)"$/ do |name|
   step "I log in to a new session"
   step "persistence is enabled"
   step "GNOME has started"
-  step "I have closed all annoying notifications"
+  step "all notifications have disappeared"
   step "the expected persistent files are present in the filesystem"
-  step "I completely shutdown Tails"
+  step "I shutdown Tails and wait for the computer to power off"
 end
 
 When /^I delete the persistent partition$/ do
