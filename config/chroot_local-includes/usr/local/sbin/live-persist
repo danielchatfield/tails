@@ -330,7 +330,7 @@ activate_volumes ()
 	do
 		if grep -E -qs --line-regex \
 			-e '/home/amnesia/\.gconf/system/networking/connections\s+source=nm-connections' \
-			"$conf"
+			"$conf" \
 		   && ! grep -E -qs --line-regex \
 			-e '/etc/NetworkManager/system-connections\s+source=nm-system-connections' \
 			"$conf"
